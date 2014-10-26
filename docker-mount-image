@@ -1,0 +1,26 @@
+#! /bin/bash
+
+DOCKER_AUFS_PATH="/var/lib/docker/aufs/"
+DOCKER_AUFS_LAYERS="${DOCKER_AUFS_PATH}/layers/"
+DOCKER_AUFS_DIFF="${DOCKER_AUFS_PATH}/diff/"
+
+error() { echo "$@" 1>&2; }
+
+if [ -z "${IMAGE}" ];
+then
+        error "Image is not specified"
+        exit 1
+fi;
+
+if [ -z "${TARGET}" ];
+then
+        error "Target is not specified"
+        exit 1
+fi;
+
+BRANCH="br"
+while read LAYER; do
+        BRANCH+=":${DOCKER_AUFS_DIFF}/${LAYER}=ro+wh"
+done < "${DOCKER_AUFS_LAYERS}/${IMAGE}"
+
+mount -t aufs -o "${BRANCH}" "${IMAGE}" "${TARGET}"
